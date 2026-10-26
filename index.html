@@ -171,7 +171,7 @@ textarea{width:100%;min-height:72px;border-radius:12px;border:1px solid var(--li
 
     <div id="sweetBlock">
       <h3 id="h-sweet">เลือกระดับความหวาน</h3>
-      <p class="hint">แต่ละแก้วเลือกความหวานต่างกันได้</p>
+      <p class="hint" id="sweetHint">แต่ละแก้วเลือกความหวานต่างกันได้</p>
       <div class="sweet" role="radiogroup" aria-labelledby="h-sweet" id="sweet"></div>
     </div>
 
@@ -244,7 +244,7 @@ const CONFIG = {
    color  : สีของเครื่องดื่มในไอคอน */
 const MENU = [
   { id: "tea-cup",    name: "ชาไทยแก้ว",       short: "ชาไทย", unit: "แก้ว", price: 40, promo: { qty: 2, price: 75 },  sweet: true,  shape: "cup",    color: "#E2701F" },
-  { id: "tea-bottle", name: "ชาไทยขวด 250 ml", short: "ชาไทย", unit: "ขวด",  price: 35, promo: { qty: 3, price: 100 }, sweet: false, shape: "bottle", color: "#E2701F" },
+  { id: "tea-bottle", name: "ชาไทยขวด 250 ml", short: "ชาไทย", unit: "ขวด",  price: 35, promo: { qty: 3, price: 100 }, sweet: true,  shape: "bottle", color: "#E2701F" },
   { id: "cocoa-cup",  name: "โกโก้แก้ว",        short: "โกโก้", unit: "แก้ว", price: 45, promo: null,                  sweet: true,  shape: "cup",    color: "#8A5333" }
 ];
 const SWEET = [
@@ -320,6 +320,7 @@ function selectItem(id, focus) {
   state.item = id;
   renderMenu(); renderSweet();
   $("sweetBlock").hidden = !cur().sweet;
+  $("sweetHint").textContent = `แต่ละ${cur().unit}เลือกความหวานต่างกันได้`;
   if (focus) $("menu").querySelector(`[data-id="${id}"]`).focus();
 }
 $("menu").addEventListener("click", e => {
