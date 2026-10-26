@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>สั่งชาไทย | Tod YEN</title>
+<title>สั่งเครื่องดื่ม | Tod YEN</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
@@ -54,7 +54,8 @@ button:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline
 .photo{position:relative}
 .photo img{display:block;width:100%;height:auto;transform:scale(1.12);transform-origin:center 60%;
   filter:drop-shadow(0 14px 10px rgba(3,22,60,.45))}
-.promo{margin-top:16px;display:inline-flex;align-items:center;gap:10px;background:var(--blue-deep);border-radius:999px;padding:6px 14px 6px 6px;font-size:14px}
+.promos{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.promo{display:inline-flex;align-items:center;gap:10px;background:var(--blue-deep);border-radius:999px;padding:6px 14px 6px 6px;font-size:14px}
 .promo em{font-style:normal;background:var(--sun);color:var(--blue);font-family:"Mitr",sans-serif;font-weight:500;border-radius:999px;padding:2px 10px}
 .promo s{color:#9FB3DA}
 
@@ -62,6 +63,18 @@ button:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline
 section.card{background:var(--surface);margin:14px 12px 0;border-radius:18px;padding:18px 16px}
 .card h2{font-size:19px;margin-bottom:4px}
 .hint{color:var(--muted);font-size:14px;margin:0 0 14px}
+
+/* menu */
+.menu{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mi{background:var(--chip);border:2px solid transparent;border-radius:14px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink);text-align:center}
+.mi svg{width:34px;height:44px;color:var(--muted)}
+.mi .mname{font-family:"Mitr",sans-serif;font-size:14px;line-height:1.25}
+.mi .mprice{font-size:13px;color:var(--muted)}
+.mi .mpromo{font-size:11.5px;background:var(--sun);color:var(--blue);border-radius:999px;padding:1px 8px;margin-top:2px}
+.mi[aria-checked="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.mi[aria-checked="true"] svg{color:#fff}
+.mi[aria-checked="true"] .mprice{color:#D6E2F7}
+.card h3{font-family:"Mitr","IBM Plex Sans Thai",Tahoma,sans-serif;font-weight:500;font-size:17px;margin:18px 0 2px}
 
 /* sweetness */
 .sweet{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
@@ -148,16 +161,22 @@ textarea{width:100%;min-height:72px;border-radius:12px;border:1px solid var(--li
       </div>
     </div>
     <p class="tagline">ชงใหม่ทุกแก้ว ไม่ใช่ชงค้าง ชาเข้มข้น หอมนม หวานกำลังดี</p>
-    <div class="promo"><em>โปร 2 แก้ว</em><span><s id="promoOld">80</s> <b id="promoNew">75</b> บาท</span></div>
+    <div class="promos" id="promos"></div>
   </header>
 
-  <section class="card" aria-labelledby="h-sweet">
-    <h2 id="h-sweet">เลือกระดับความหวาน</h2>
-    <p class="hint">แต่ละแก้วเลือกความหวานต่างกันได้</p>
-    <div class="sweet" role="radiogroup" aria-labelledby="h-sweet" id="sweet"></div>
+  <section class="card" aria-labelledby="h-menu">
+    <h2 id="h-menu">เลือกเมนู</h2>
+    <p class="hint">กดเลือกเมนู แล้วเพิ่มลงตะกร้า สั่งหลายเมนูรวมกันได้</p>
+    <div class="menu" role="radiogroup" aria-labelledby="h-menu" id="menu"></div>
+
+    <div id="sweetBlock">
+      <h3 id="h-sweet">เลือกระดับความหวาน</h3>
+      <p class="hint">แต่ละแก้วเลือกความหวานต่างกันได้</p>
+      <div class="sweet" role="radiogroup" aria-labelledby="h-sweet" id="sweet"></div>
+    </div>
 
     <div class="add-row">
-      <div class="stepper" aria-label="จำนวนแก้ว">
+      <div class="stepper" aria-label="จำนวน">
         <button type="button" id="qMinus" aria-label="ลดจำนวน">−</button>
         <output id="qOut" aria-live="polite">1</output>
         <button type="button" id="qPlus" aria-label="เพิ่มจำนวน">+</button>
@@ -209,12 +228,25 @@ textarea{width:100%;min-height:72px;border-radius:12px;border:1px solid var(--li
 const CONFIG = {
   LIFF_ID: "2012039672-zfDXVrM2",      // ใส่ LIFF ID จาก LINE Developers เช่น "2001234567-AbCdEfGh"
   SHOP_NAME: "Tod YEN Thai Tea",
-  ITEM_NAME: "ชาไทย",
-  PRICE: 40,                     // ราคาต่อแก้ว
-  PROMO_PAIR: 75,                // ราคาโปร 2 แก้ว (ใส่ 0 ถ้าไม่มีโปร)
   PAY_KEYWORD: "ชำระเงิน",       // ต้องตรงกับคีย์เวิร์ดข้อความตอบกลับอัตโนมัติ
   OA_ID: "@137zxich"             // LINE ID ของร้าน (ขึ้นต้นด้วย @) ใช้ตอนเปิดหน้านี้นอก LINE
 };
+
+/* เมนู — เพิ่ม / ลบ / แก้ราคาได้ที่นี่
+   id     : รหัสเมนู (ห้ามซ้ำกัน)
+   name   : ชื่อเต็มที่แสดงในตะกร้าและออเดอร์
+   short  : ชื่อสั้น ใช้บนป้ายโปร
+   unit   : หน่วยนับ (แก้ว / ขวด)
+   price  : ราคาต่อหน่วย
+   promo  : { qty: จำนวน, price: ราคาโปร }  หรือ null ถ้าไม่มีโปร
+   sweet  : true = ให้ลูกค้าเลือกระดับความหวาน
+   shape  : "cup" หรือ "bottle" (รูปไอคอน)
+   color  : สีของเครื่องดื่มในไอคอน */
+const MENU = [
+  { id: "tea-cup",    name: "ชาไทยแก้ว",       short: "ชาไทย", unit: "แก้ว", price: 40, promo: { qty: 2, price: 75 },  sweet: true,  shape: "cup",    color: "#E2701F" },
+  { id: "tea-bottle", name: "ชาไทยขวด 250 ml", short: "ชาไทย", unit: "ขวด",  price: 35, promo: { qty: 3, price: 100 }, sweet: false, shape: "bottle", color: "#E2701F" },
+  { id: "cocoa-cup",  name: "โกโก้แก้ว",        short: "โกโก้", unit: "แก้ว", price: 45, promo: null,                  sweet: true,  shape: "cup",    color: "#8A5333" }
+];
 const SWEET = [
   { v: 0,   t: "ไม่หวาน" },
   { v: 25,  t: "หวานน้อย" },
@@ -225,33 +257,90 @@ const SWEET = [
 /* ========================================================= */
 
 const $ = (id) => document.getElementById(id);
-const state = { sweet: 100, qty: 1, cart: new Map() };
+const state = { item: MENU[0].id, sweet: 100, qty: 1, cart: new Map() };
 let liffReady = false;
 
-$("promoOld").textContent = CONFIG.PRICE * 2;
-$("promoNew").textContent = CONFIG.PROMO_PAIR;
-if (!CONFIG.PROMO_PAIR) document.querySelector(".promo").hidden = true;
+const itemOf = (id) => MENU.find(m => m.id === id);
+const cur = () => itemOf(state.item);
+const promoText = (m) => `${m.short} ${m.promo.qty} ${m.unit} ${m.promo.price}`;
 
-function cupSVG(level, uid) {
+/* ป้ายโปรบนหัวหน้า */
+(() => {
+  const withPromo = MENU.filter(m => m.promo);
+  $("promos").innerHTML = withPromo.map(m => `
+    <div class="promo"><em>${m.short} ${m.promo.qty} ${m.unit}</em><span><s>${m.promo.qty * m.price}</s> <b>${m.promo.price}</b> บาท</span></div>`).join("");
+  $("promos").hidden = !withPromo.length;
+})();
+
+function cupSVG(level, uid, color) {
   const top = 8, bottom = 48, h = bottom - top;
   const fillH = h * Math.min(level, 100) / 100;
+  const fill = `style="fill:${color || "var(--tea)"}"`;
   const dome = level > 100
-    ? `<ellipse cx="20" cy="${top}" rx="13" ry="${3 + (level - 100) / 10}" class="sugar"/>` : "";
+    ? `<ellipse cx="20" cy="${top}" rx="13" ry="${3 + (level - 100) / 10}" class="sugar" ${fill}/>` : "";
   return `<svg viewBox="0 0 40 52" aria-hidden="true">
     <defs><clipPath id="c${uid}"><path d="M6 ${top} L34 ${top} L30 ${bottom} L10 ${bottom} Z"/></clipPath></defs>
-    <rect x="0" y="${bottom - fillH}" width="40" height="${fillH}" class="sugar" clip-path="url(#c${uid})"/>
+    <rect x="0" y="${bottom - fillH}" width="40" height="${fillH}" class="sugar" ${fill} clip-path="url(#c${uid})"/>
     ${dome}
     <path d="M6 ${top} L34 ${top} L30 ${bottom} L10 ${bottom} Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
     <path d="M4 ${top} H36" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
   </svg>`;
 }
 
-function sweetLabel(v) { return SWEET.find(s => s.v === v).t; }
+function bottleSVG(uid, color) {
+  const body = "M15 5 H25 V13 Q32 17 32 23 V46 Q32 49 29 49 H11 Q8 49 8 46 V23 Q8 17 15 13 Z";
+  return `<svg viewBox="0 0 40 52" aria-hidden="true">
+    <defs><clipPath id="b${uid}"><path d="${body}"/></clipPath></defs>
+    <rect x="0" y="21" width="40" height="31" class="sugar" style="fill:${color}" clip-path="url(#b${uid})"/>
+    <path d="${body}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M13 4 H27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`;
+}
 
+function icon(m, level, uid) {
+  return m.shape === "bottle" ? bottleSVG(uid, m.color) : cupSVG(level ?? 100, uid, m.color);
+}
+
+function sweetLabel(v) { return SWEET.find(s => s.v === v).t; }
+function lineName(l) {
+  return l.sweet === null ? l.item.name : `${l.item.name} ${sweetLabel(l.sweet)} (${l.sweet}%)`;
+}
+
+/* ---------- เลือกเมนู ---------- */
+function renderMenu() {
+  $("menu").innerHTML = MENU.map((m, i) => `
+    <button type="button" class="mi" role="radio" aria-checked="${m.id === state.item}" data-id="${m.id}" tabindex="${m.id === state.item ? 0 : -1}">
+      ${icon(m, 100, "m" + i)}
+      <span class="mname">${m.name}</span>
+      <span class="mprice">${m.price} บาท</span>
+      ${m.promo ? `<span class="mpromo">${m.promo.qty} ${m.unit} ${m.promo.price}</span>` : ""}
+    </button>`).join("");
+}
+function selectItem(id, focus) {
+  state.item = id;
+  renderMenu(); renderSweet();
+  $("sweetBlock").hidden = !cur().sweet;
+  if (focus) $("menu").querySelector(`[data-id="${id}"]`).focus();
+}
+$("menu").addEventListener("click", e => {
+  const b = e.target.closest(".mi"); if (!b) return;
+  selectItem(b.dataset.id, true);
+});
+$("menu").addEventListener("keydown", e => {
+  const idx = MENU.findIndex(m => m.id === state.item);
+  let n = idx;
+  if (e.key === "ArrowRight" || e.key === "ArrowDown") n = Math.min(MENU.length - 1, idx + 1);
+  else if (e.key === "ArrowLeft" || e.key === "ArrowUp") n = Math.max(0, idx - 1);
+  else return;
+  e.preventDefault(); selectItem(MENU[n].id, true);
+});
+
+/* ---------- ความหวาน ---------- */
 function renderSweet() {
+  const c = cur().color;
   $("sweet").innerHTML = SWEET.map((s, i) => `
     <button type="button" class="sw" role="radio" aria-checked="${s.v === state.sweet}" data-v="${s.v}" tabindex="${s.v === state.sweet ? 0 : -1}">
-      ${cupSVG(s.v, "s" + i)}
+      ${cupSVG(s.v, "s" + i, c)}
       <span class="pct">${s.v}%</span>
       <span class="lbl">${s.t}</span>
     </button>`).join("");
@@ -275,39 +364,67 @@ $("qMinus").onclick = () => { state.qty = Math.max(1, state.qty - 1); $("qOut").
 $("qPlus").onclick  = () => { state.qty = Math.min(20, state.qty + 1); $("qOut").textContent = state.qty; };
 
 $("addBtn").onclick = () => {
-  const cur = state.cart.get(state.sweet) || 0;
-  state.cart.set(state.sweet, cur + state.qty);
-  toast(`เพิ่ม${CONFIG.ITEM_NAME} ${sweetLabel(state.sweet)} ${state.qty} แก้วแล้ว`);
+  const m = cur();
+  const sw = m.sweet ? state.sweet : null;
+  const key = `${m.id}|${sw === null ? "-" : sw}`;
+  state.cart.set(key, (state.cart.get(key) || 0) + state.qty);
+  toast(`เพิ่ม${m.name}${sw === null ? "" : " " + sweetLabel(sw)} ${state.qty} ${m.unit}แล้ว`);
   state.qty = 1; $("qOut").textContent = 1;
   renderCart(true);
 };
 
+/* ---------- คำนวณราคา (โปรคิดแยกตามเมนู รวมทุกระดับความหวาน) ---------- */
 function totals() {
-  let n = 0; state.cart.forEach(q => n += q);
-  const regular = n * CONFIG.PRICE;
-  if (!CONFIG.PROMO_PAIR) return { n, regular, discount: 0, total: regular, pairs: 0 };
-  const pairs = Math.floor(n / 2);
-  const total = pairs * CONFIG.PROMO_PAIR + (n % 2) * CONFIG.PRICE;
-  return { n, regular, discount: regular - total, total, pairs };
+  const per = MENU.map(m => {
+    let n = 0;
+    state.cart.forEach((q, k) => { if (k.split("|")[0] === m.id) n += q; });
+    const regular = n * m.price;
+    const sets = m.promo ? Math.floor(n / m.promo.qty) : 0;
+    const total = m.promo ? sets * m.promo.price + (n % m.promo.qty) * m.price : regular;
+    return { item: m, n, regular, sets, total, discount: Math.max(0, regular - total) };
+  }).filter(p => p.n);
+  const add = (k) => per.reduce((a, p) => a + p[k], 0);
+  return { per, n: add("n"), regular: add("regular"), discount: add("discount"), total: add("regular") - add("discount") };
+}
+
+function countText(per) {
+  const byUnit = {};
+  per.forEach(p => byUnit[p.item.unit] = (byUnit[p.item.unit] || 0) + p.n);
+  return Object.entries(byUnit).map(([u, n]) => `${n} ${u}`).join(" · ");
 }
 
 function cartLines() {
-  return [...state.cart.entries()].filter(([, q]) => q > 0).sort((a, b) => a[0] - b[0]);
+  return [...state.cart.entries()].filter(([, q]) => q > 0).map(([key, q]) => {
+    const [id, s] = key.split("|");
+    return { key, item: itemOf(id), sweet: s === "-" ? null : Number(s), q };
+  }).filter(l => l.item)
+    .sort((a, b) => MENU.indexOf(a.item) - MENU.indexOf(b.item) || (a.sweet ?? 0) - (b.sweet ?? 0));
+}
+
+function upsellText(t) {
+  for (const p of t.per) {
+    const pr = p.item.promo; if (!pr) continue;
+    const r = p.n % pr.qty; if (!r) continue;
+    const need = pr.qty - r, extra = pr.price - r * p.item.price;
+    if (extra > 0 && extra < need * p.item.price)
+      return `เพิ่ม${p.item.short}อีก ${need} ${p.item.unit} จ่ายเพิ่มแค่ ${extra} บาท (โปร ${pr.qty} ${p.item.unit} ${pr.price})`;
+  }
+  return "";
 }
 
 function renderCart(bump) {
   const lines = cartLines();
   if (!lines.length) {
-    $("cart").innerHTML = `<p class="empty">เลือกความหวานด้านบน แล้วกด "เพิ่มลงตะกร้า"</p>`;
+    $("cart").innerHTML = `<p class="empty">เลือกเมนูด้านบน แล้วกด "เพิ่มลงตะกร้า"</p>`;
   } else {
-    $("cart").innerHTML = lines.map(([v, q], i) => `
+    $("cart").innerHTML = lines.map((l, i) => `
       <div class="line">
-        <span class="mini">${cupSVG(v, "l" + i)}</span>
-        <div class="name"><b>${CONFIG.ITEM_NAME}</b><span>${sweetLabel(v)} ${v}%</span></div>
+        <span class="mini">${icon(l.item, l.sweet, "l" + i)}</span>
+        <div class="name"><b>${l.item.name}</b><span>${l.sweet === null ? `${l.item.price} บาท / ${l.item.unit}` : `${sweetLabel(l.sweet)} ${l.sweet}%`}</span></div>
         <div class="qty">
-          <button type="button" data-act="dec" data-v="${v}" aria-label="ลด ${sweetLabel(v)}">−</button>
-          <output>${q}</output>
-          <button type="button" data-act="inc" data-v="${v}" aria-label="เพิ่ม ${sweetLabel(v)}">+</button>
+          <button type="button" data-act="dec" data-k="${l.key}" aria-label="ลด ${lineName(l)}">−</button>
+          <output>${l.q}</output>
+          <button type="button" data-act="inc" data-k="${l.key}" aria-label="เพิ่ม ${lineName(l)}">+</button>
         </div>
       </div>`).join("");
   }
@@ -315,27 +432,24 @@ function renderCart(bump) {
   const sum = $("sum");
   if (t.n) {
     sum.hidden = false;
-    sum.innerHTML = `
-      <div><span>ราคาปกติ ${t.n} แก้ว × ${CONFIG.PRICE}</span><span>${t.regular} บาท</span></div>
-      ${t.discount ? `<div class="disc"><span>ส่วนลดโปร 2 แก้ว (${t.pairs} คู่)</span><span>−${t.discount} บาท</span></div>` : ""}
-      <div class="total"><span>ยอดที่ต้องชำระ</span><span>${t.total} บาท</span></div>`;
+    sum.innerHTML =
+      t.per.map(p => `<div><span>${p.item.name} ${p.n} × ${p.item.price}</span><span>${p.regular} บาท</span></div>`).join("") +
+      t.per.filter(p => p.discount).map(p => `<div class="disc"><span>ส่วนลดโปร ${promoText(p.item)} (${p.sets} ชุด)</span><span>−${p.discount} บาท</span></div>`).join("") +
+      `<div class="total"><span>ยอดที่ต้องชำระ</span><span>${t.total} บาท</span></div>`;
   } else sum.hidden = true;
 
-  $("barCount").textContent = t.n ? `${t.n} แก้ว` : "ยังไม่มีรายการ";
+  $("barCount").textContent = t.n ? countText(t.per) : "ยังไม่มีรายการ";
   $("barTotal").textContent = `${t.total} บาท`;
   $("goBtn").disabled = !t.n;
-  const up = $("upsell");
-  if (CONFIG.PROMO_PAIR && t.n % 2 === 1) {
-    up.hidden = false;
-    up.textContent = `เพิ่มอีก 1 แก้ว จ่ายเพิ่มแค่ ${CONFIG.PROMO_PAIR - CONFIG.PRICE} บาท (โปร 2 แก้ว ${CONFIG.PROMO_PAIR})`;
-  } else up.hidden = true;
+  const up = $("upsell"), msg = upsellText(t);
+  up.hidden = !msg; up.textContent = msg;
   if (bump) { const el = $("barTotal"); el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
 }
 $("cart").addEventListener("click", e => {
   const b = e.target.closest("button[data-act]"); if (!b) return;
-  const v = Number(b.dataset.v), q = state.cart.get(v) || 0;
+  const k = b.dataset.k, q = state.cart.get(k) || 0;
   const nq = b.dataset.act === "inc" ? q + 1 : q - 1;
-  if (nq <= 0) state.cart.delete(v); else state.cart.set(v, nq);
+  if (nq <= 0) state.cart.delete(k); else state.cart.set(k, nq);
   renderCart(true);
 });
 
@@ -349,9 +463,9 @@ function textSummary(id) {
   const t = totals();
   const note = $("note").value.trim();
   let s = `🧾 ออเดอร์ #${id}\n`;
-  cartLines().forEach(([v, q]) => s += `• ${CONFIG.ITEM_NAME} ${sweetLabel(v)} (${v}%) × ${q}\n`);
-  s += `\nรวม ${t.n} แก้ว ราคาปกติ ${t.regular} บาท\n`;
-  if (t.discount) s += `ส่วนลดโปร 2 แก้ว −${t.discount} บาท\n`;
+  cartLines().forEach(l => s += `• ${lineName(l)} × ${l.q}\n`);
+  s += `\nรวม ${countText(t.per)} ราคาปกติ ${t.regular} บาท\n`;
+  t.per.filter(p => p.discount).forEach(p => s += `ส่วนลดโปร ${promoText(p.item)} −${p.discount} บาท\n`);
   s += `💰 ยอดชำระ ${t.total} บาท`;
   if (note) s += `\n📍 ที่อยู่จัดส่ง: ${note}`;
   s += `\n\nกด "${CONFIG.PAY_KEYWORD}" เพื่อรับ QR Code`;
@@ -367,12 +481,11 @@ function flexSummary(id) {
       { type: "text", text: r, size: opt.size || "sm", color: opt.rcolor || opt.color || "#111111", flex: 3, align: "end", weight: opt.weight || "regular" }
     ]
   });
-  const items = cartLines().map(([v, q]) =>
-    row(`${CONFIG.ITEM_NAME} ${sweetLabel(v)} ${v}% × ${q}`, `${q * CONFIG.PRICE} บาท`));
+  const items = cartLines().map(l => row(`${lineName(l)} × ${l.q}`, `${l.q * l.item.price} บาท`));
   const body = [
     ...items,
     { type: "separator", margin: "md" },
-    ...(t.discount ? [row(`ส่วนลดโปร 2 แก้ว`, `−${t.discount} บาท`, { color: "#E05638" })] : []),
+    ...t.per.filter(p => p.discount).map(p => row(`ส่วนลดโปร ${promoText(p.item)}`, `−${p.discount} บาท`, { color: "#E05638" })),
     row("ยอดชำระ", `${t.total} บาท`, { size: "md", weight: "bold", color: "#111111", rcolor: "#E2701F" })
   ];
   if (note) body.push({ type: "text", text: `ที่อยู่จัดส่ง: ${note}`, size: "xs", color: "#888888", wrap: true, margin: "md" });
@@ -384,7 +497,7 @@ function flexSummary(id) {
       header: { type: "box", layout: "vertical", backgroundColor: "#0B4AA8", paddingAll: "16px", contents: [
         { type: "text", text: CONFIG.SHOP_NAME, color: "#FFD23F", size: "sm", weight: "bold" },
         { type: "text", text: `รายการสั่งซื้อ #${id}`, color: "#FFFFFF", size: "lg", weight: "bold", margin: "sm" },
-        { type: "text", text: `${t.n} แก้ว`, color: "#BFD1F2", size: "xs" }
+        { type: "text", text: countText(t.per), color: "#BFD1F2", size: "xs" }
       ]},
       body: { type: "box", layout: "vertical", contents: body },
       footer: { type: "box", layout: "vertical", contents: [
@@ -394,7 +507,6 @@ function flexSummary(id) {
     }
   };
 }
-
 function openSheet(title, msg, text) {
   $("sheetTitle").textContent = title;
   $("sheetMsg").textContent = msg;
@@ -444,6 +556,7 @@ function toast(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
 }
 
+renderMenu();
 renderSweet();
 renderCart(false);
 
