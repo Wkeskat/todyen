@@ -71,6 +71,8 @@ section.card{background:var(--surface);margin:14px 12px 0;border-radius:18px;pad
 .mi .mname{font-family:"Mitr",sans-serif;font-size:14px;line-height:1.25}
 .mi .mprice{font-size:13px;color:var(--muted)}
 .mi .mpromo{font-size:11.5px;background:var(--sun);color:var(--blue);border-radius:999px;padding:1px 8px;margin-top:2px}
+.mi .mmix{font-size:11px;color:var(--muted);line-height:1.25}
+.mi[aria-checked="true"] .mmix{color:#D6E2F7}
 .mi[aria-checked="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
 .mi[aria-checked="true"] svg{color:#fff}
 .mi[aria-checked="true"] .mprice{color:#D6E2F7}
@@ -137,6 +139,21 @@ textarea{width:100%;min-height:72px;border-radius:12px;border:1px solid var(--li
 .sheet{background:var(--surface);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px));max-height:85vh;overflow:auto}
 .sheet h2{font-size:21px;margin-bottom:6px}
 .sheet pre{white-space:pre-wrap;font-family:inherit;background:var(--chip);border-radius:12px;padding:12px;font-size:15px;margin:12px 0}
+.sv{background:var(--chip);border-radius:12px;padding:4px 12px 12px;margin:12px 0;font-size:15px}
+.sv-id{font-family:"Mitr",sans-serif;font-size:14px;color:var(--muted);padding:8px 0 2px}
+.sv-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.sv-id + .sv-row{border-top:0}
+.sv-ic svg{display:block;width:26px;height:34px;color:var(--muted)}
+.sv-nm{flex:1;min-width:0;line-height:1.3}
+.sv-nm b{font-weight:500;display:block}
+.sv-nm small{font-size:13.5px;color:var(--muted)}
+.sv-q{font-family:"Mitr",sans-serif;font-size:16px;white-space:nowrap}
+.sv-sum{border-top:2px dashed var(--line);margin-top:4px;padding-top:8px}
+.sv-sum div{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+.sv-sum .disc{color:var(--coral)}
+.sv-sum .tot{font-family:"Mitr",sans-serif;font-size:19px;padding-top:6px}
+.sv-sum .tot span:last-child{color:var(--tea)}
+.sv-note{margin:10px 0 0;font-size:14px;color:var(--muted)}
 .sheet .actions{display:flex;gap:10px}
 .sheet .actions button{flex:1;border-radius:12px;padding:12px;border:1px solid var(--line);background:var(--surface);font-family:"Mitr",sans-serif}
 .sheet .actions .primary{background:var(--cta);color:#fff;border-color:var(--cta)}
@@ -211,7 +228,8 @@ textarea{width:100%;min-height:72px;border-radius:12px;border:1px solid var(--li
   <div class="sheet">
     <h2 id="sheetTitle">สรุปคำสั่งซื้อ</h2>
     <p class="hint" id="sheetMsg"></p>
-    <pre id="sheetText"></pre>
+    <div class="sv" id="sheetView"></div>
+    <pre id="sheetText" hidden></pre>
     <div class="actions">
       <button type="button" id="closeSheet">แก้ไขรายการ</button>
       <button type="button" class="primary" id="copyBtn">สั่งซื้อ</button>
@@ -229,7 +247,8 @@ const CONFIG = {
   LIFF_ID: "2012039672-zfDXVrM2",      // ใส่ LIFF ID จาก LINE Developers เช่น "2001234567-AbCdEfGh"
   SHOP_NAME: "Tod YEN Thai Tea",
   PAY_KEYWORD: "ชำระเงิน",       // ต้องตรงกับคีย์เวิร์ดข้อความตอบกลับอัตโนมัติ
-  OA_ID: "@137zxich"             // LINE ID ของร้าน (ขึ้นต้นด้วย @) ใช้ตอนเปิดหน้านี้นอก LINE
+  OA_ID: "@137zxich",            // LINE ID ของร้าน (ขึ้นต้นด้วย @) ใช้ตอนเปิดหน้านี้นอก LINE
+  ICON_DIR: "icons/"             // โฟลเดอร์รูปไอคอน (อัปโหลดไว้ข้างไฟล์ index.html) ใช้ในการ์ดออเดอร์ใน LINE
 };
 
 /* เมนู — เพิ่ม / ลบ / แก้ราคาได้ที่นี่
@@ -238,14 +257,19 @@ const CONFIG = {
    short  : ชื่อสั้น ใช้บนป้ายโปร
    unit   : หน่วยนับ (แก้ว / ขวด)
    price  : ราคาต่อหน่วย
-   promo  : { qty: จำนวน, price: ราคาโปร }  หรือ null ถ้าไม่มีโปร
+   promo  : { qty: จำนวน, price: ราคาโปร, group: "ชื่อกลุ่ม" }  หรือ null ถ้าไม่มีโปร
+            group (ไม่ใส่ก็ได้) : เมนูที่ใส่ group เดียวกันจะคละรสรวมโปรกันได้
+            เมนูในกลุ่มเดียวกันต้องตั้ง qty / price / unit ให้เหมือนกัน
    sweet  : true = ให้ลูกค้าเลือกระดับความหวาน
    shape  : "cup" หรือ "bottle" (รูปไอคอน)
-   color  : สีของเครื่องดื่มในไอคอน */
+   color  : สีของเครื่องดื่มในไอคอน
+   emoji  : ไอคอนหน้ารายการในสรุปออเดอร์ (แยกสีตามรส) */
 const MENU = [
-  { id: "tea-cup",    name: "ชาไทยแก้ว",       short: "ชาไทย", unit: "แก้ว", price: 40, promo: { qty: 2, price: 75 },  sweet: true,  shape: "cup",    color: "#E2701F" },
-  { id: "tea-bottle", name: "ชาไทยขวด 250 ml", short: "ชาไทย", unit: "ขวด",  price: 35, promo: { qty: 3, price: 100 }, sweet: true,  shape: "bottle", color: "#E2701F" },
-  { id: "cocoa-cup",  name: "โกโก้แก้ว",        short: "โกโก้", unit: "แก้ว", price: 45, promo: null,                  sweet: true,  shape: "cup",    color: "#8A5333" }
+  { id: "tea-cup",      name: "ชาไทยแก้ว",         short: "ชาไทย",   unit: "แก้ว", price: 40, promo: { qty: 2, price: 75 },                     sweet: true, shape: "cup",    color: "#E2701F", emoji: "🟠" },
+  { id: "green-cup",    name: "ชาเขียวแก้ว",        short: "ชาเขียว", unit: "แก้ว", price: 40, promo: null,                                     sweet: true, shape: "cup",    color: "#6FA23A", emoji: "🟢" },
+  { id: "cocoa-cup",    name: "โกโก้แก้ว",          short: "โกโก้",   unit: "แก้ว", price: 45, promo: null,                                     sweet: true, shape: "cup",    color: "#8A5333", emoji: "🟤" },
+  { id: "tea-bottle",   name: "ชาไทยขวด 250 ml",   short: "ชาไทย",   unit: "ขวด",  price: 35, promo: { qty: 3, price: 100, group: "bottle-mix" }, sweet: true, shape: "bottle", color: "#E2701F", emoji: "🟠" },
+  { id: "green-bottle", name: "ชาเขียวขวด 250 ml", short: "ชาเขียว", unit: "ขวด",  price: 35, promo: { qty: 3, price: 100, group: "bottle-mix" }, sweet: true, shape: "bottle", color: "#6FA23A", emoji: "🟢" }
 ];
 const SWEET = [
   { v: 0,   t: "ไม่หวาน" },
@@ -262,14 +286,30 @@ let liffReady = false;
 
 const itemOf = (id) => MENU.find(m => m.id === id);
 const cur = () => itemOf(state.item);
-const promoText = (m) => `${m.short} ${m.promo.qty} ${m.unit} ${m.promo.price}`;
+const groupOf = (m) => m.promo ? (m.promo.group || m.id) : null;
+
+/* กลุ่มโปร: เมนูที่ group เดียวกันนับจำนวนรวมกัน (คละรสได้) */
+const GROUPS = (() => {
+  const g = new Map();
+  MENU.forEach(m => {
+    const k = groupOf(m); if (!k) return;
+    if (!g.has(k)) g.set(k, { key: k, qty: m.promo.qty, price: m.promo.price, unit: m.unit, members: [] });
+    g.get(k).members.push(m);
+  });
+  return [...g.values()].map(x => {
+    const names = [...new Set(x.members.map(m => m.short))];
+    const mix = names.length > 1;
+    return { ...x, names, mix, maxPrice: Math.max(...x.members.map(m => m.price)), minPrice: Math.min(...x.members.map(m => m.price)),
+      label: `${names.join("/")} ${x.qty} ${x.unit} ${x.price}${mix ? " คละรสได้" : ""}` };
+  });
+})();
+const groupInfo = (m) => GROUPS.find(g => g.key === groupOf(m));
 
 /* ป้ายโปรบนหัวหน้า */
 (() => {
-  const withPromo = MENU.filter(m => m.promo);
-  $("promos").innerHTML = withPromo.map(m => `
-    <div class="promo"><em>${m.short} ${m.promo.qty} ${m.unit}</em><span><s>${m.promo.qty * m.price}</s> <b>${m.promo.price}</b> บาท</span></div>`).join("");
-  $("promos").hidden = !withPromo.length;
+  $("promos").innerHTML = GROUPS.map(g => `
+    <div class="promo"><em>${g.names.join("/")} ${g.qty} ${g.unit}</em><span><s>${g.qty * g.maxPrice}</s> <b>${g.price}</b> บาท${g.mix ? " คละรสได้" : ""}</span></div>`).join("");
+  $("promos").hidden = !GROUPS.length;
 })();
 
 function cupSVG(level, uid, color) {
@@ -314,6 +354,8 @@ function renderMenu() {
       <span class="mname">${m.name}</span>
       <span class="mprice">${m.price} บาท</span>
       ${m.promo ? `<span class="mpromo">${m.promo.qty} ${m.unit} ${m.promo.price}</span>` : ""}
+      ${(() => { const g = groupInfo(m); if (!g || !g.mix) return "";
+        return `<span class="mmix">คละกับ${g.names.filter(n => n !== m.short).join("/")}ได้</span>`; })()}
     </button>`).join("");
 }
 function selectItem(id, focus) {
@@ -374,18 +416,26 @@ $("addBtn").onclick = () => {
   renderCart(true);
 };
 
-/* ---------- คำนวณราคา (โปรคิดแยกตามเมนู รวมทุกระดับความหวาน) ---------- */
+/* ---------- คำนวณราคา (โปรคิดตามกลุ่ม รวมทุกระดับความหวาน และคละรสในกลุ่มเดียวกัน) ---------- */
 function totals() {
   const per = MENU.map(m => {
     let n = 0;
     state.cart.forEach((q, k) => { if (k.split("|")[0] === m.id) n += q; });
-    const regular = n * m.price;
-    const sets = m.promo ? Math.floor(n / m.promo.qty) : 0;
-    const total = m.promo ? sets * m.promo.price + (n % m.promo.qty) * m.price : regular;
-    return { item: m, n, regular, sets, total, discount: Math.max(0, regular - total) };
+    return { item: m, n, regular: n * m.price };
   }).filter(p => p.n);
-  const add = (k) => per.reduce((a, p) => a + p[k], 0);
-  return { per, n: add("n"), regular: add("regular"), discount: add("discount"), total: add("regular") - add("discount") };
+  const groups = GROUPS.map(g => {
+    const units = [];
+    per.filter(p => groupOf(p.item) === g.key).forEach(p => { for (let i = 0; i < p.n; i++) units.push(p.item.price); });
+    units.sort((a, b) => b - a);
+    const n = units.length, sets = Math.floor(n / g.qty);
+    const regular = units.reduce((a, b) => a + b, 0);
+    const rest = units.slice(sets * g.qty).reduce((a, b) => a + b, 0);
+    const total = sets * g.price + rest;
+    return { ...g, n, sets, regular, rest, total, discount: Math.max(0, regular - total) };
+  }).filter(g => g.n);
+  const add = (arr, k) => arr.reduce((a, p) => a + p[k], 0);
+  const regular = add(per, "regular"), discount = add(groups, "discount");
+  return { per, groups, n: add(per, "n"), regular, discount, total: regular - discount };
 }
 
 function countText(per) {
@@ -403,12 +453,11 @@ function cartLines() {
 }
 
 function upsellText(t) {
-  for (const p of t.per) {
-    const pr = p.item.promo; if (!pr) continue;
-    const r = p.n % pr.qty; if (!r) continue;
-    const need = pr.qty - r, extra = pr.price - r * p.item.price;
-    if (extra > 0 && extra < need * p.item.price)
-      return `เพิ่ม${p.item.short}อีก ${need} ${p.item.unit} จ่ายเพิ่มแค่ ${extra} บาท (โปร ${pr.qty} ${p.item.unit} ${pr.price})`;
+  for (const g of t.groups) {
+    const r = g.n % g.qty; if (!r) continue;
+    const need = g.qty - r, extra = g.price - g.rest;
+    if (extra > 0 && extra < need * g.minPrice)
+      return `เพิ่ม${g.names.join("หรือ")}อีก ${need} ${g.unit} จ่ายเพิ่มแค่ ${extra} บาท (โปร ${g.label})`;
   }
   return "";
 }
@@ -435,7 +484,7 @@ function renderCart(bump) {
     sum.hidden = false;
     sum.innerHTML =
       t.per.map(p => `<div><span>${p.item.name} ${p.n} × ${p.item.price}</span><span>${p.regular} บาท</span></div>`).join("") +
-      t.per.filter(p => p.discount).map(p => `<div class="disc"><span>ส่วนลดโปร ${promoText(p.item)} (${p.sets} ชุด)</span><span>−${p.discount} บาท</span></div>`).join("") +
+      t.groups.filter(g => g.discount).map(g => `<div class="disc"><span>ส่วนลดโปร ${g.label} (${g.sets} ชุด)</span><span>−${g.discount} บาท</span></div>`).join("") +
       `<div class="total"><span>ยอดที่ต้องชำระ</span><span>${t.total} บาท</span></div>`;
   } else sum.hidden = true;
 
@@ -464,15 +513,21 @@ function textSummary(id) {
   const t = totals();
   const note = $("note").value.trim();
   let s = `🧾 ออเดอร์ #${id}\n`;
-  cartLines().forEach(l => s += `• ${lineName(l)} × ${l.q}\n`);
-  s += `\nรวม ${countText(t.per)} ราคาปกติ ${t.regular} บาท\n`;
-  t.per.filter(p => p.discount).forEach(p => s += `ส่วนลดโปร ${promoText(p.item)} −${p.discount} บาท\n`);
+  cartLines().forEach(l => s += `${l.item.emoji || "•"} ${lineName(l)} × ${l.q}\n`);
+  s += `\n🛒 รวม ${countText(t.per)} ราคาปกติ ${t.regular} บาท\n`;
+  t.groups.filter(g => g.discount).forEach(g => s += `🏷️ ส่วนลดโปร ${g.label} −${g.discount} บาท\n`);
   s += `💰 ยอดชำระ ${t.total} บาท`;
   if (note) s += `\n📍 ที่อยู่จัดส่ง: ${note}`;
   s += `\n\nกด "${CONFIG.PAY_KEYWORD}" เพื่อรับ QR Code`;
   return s;
 }
 
+/* รูปไอคอนสำหรับการ์ดใน LINE (LINE รับเฉพาะรูป PNG/JPG ที่อยู่บน https) */
+function iconUrl(l) {
+  if (!CONFIG.ICON_DIR || location.protocol !== "https:") return null;
+  const file = l.item.shape === "bottle" ? `${l.item.id}.png` : `${l.item.id}-${l.sweet ?? 100}.png`;
+  return new URL(CONFIG.ICON_DIR + file, location.href).href;
+}
 function flexSummary(id) {
   const t = totals();
   const note = $("note").value.trim();
@@ -482,14 +537,23 @@ function flexSummary(id) {
       { type: "text", text: r, size: opt.size || "sm", color: opt.rcolor || opt.color || "#111111", flex: 3, align: "end", weight: opt.weight || "regular" }
     ]
   });
-  const items = cartLines().map(l => row(`${lineName(l)} × ${l.q}`, `${l.q * l.item.price} บาท`));
+  const items = cartLines().map(l => {
+    const url = iconUrl(l);
+    const r = row(`${url ? "" : (l.item.emoji || "•") + " "}${lineName(l)} × ${l.q}`, `${l.q * l.item.price} บาท`);
+    if (!url) return r;
+    r.contents.unshift({ type: "box", layout: "vertical", width: "22px", flex: 0, contents: [
+      { type: "image", url, size: "full", aspectRatio: "40:52", aspectMode: "fit" }
+    ]});
+    r.spacing = "md"; r.alignItems = "center";
+    return r;
+  });
   const body = [
     ...items,
     { type: "separator", margin: "md" },
-    ...t.per.filter(p => p.discount).map(p => row(`ส่วนลดโปร ${promoText(p.item)}`, `−${p.discount} บาท`, { color: "#E05638" })),
-    row("ยอดชำระ", `${t.total} บาท`, { size: "md", weight: "bold", color: "#111111", rcolor: "#E2701F" })
+    ...t.groups.filter(g => g.discount).map(g => row(`🏷️ ส่วนลดโปร ${g.label}`, `−${g.discount} บาท`, { color: "#E05638" })),
+    row("💰 ยอดชำระ", `${t.total} บาท`, { size: "md", weight: "bold", color: "#111111", rcolor: "#E2701F" })
   ];
-  if (note) body.push({ type: "text", text: `ที่อยู่จัดส่ง: ${note}`, size: "xs", color: "#888888", wrap: true, margin: "md" });
+  if (note) body.push({ type: "text", text: `📍 ที่อยู่จัดส่ง: ${note}`, size: "xs", color: "#888888", wrap: true, margin: "md" });
   return {
     type: "flex",
     altText: `ออเดอร์ #${id} ยอดชำระ ${t.total} บาท`,
@@ -508,7 +572,27 @@ function flexSummary(id) {
     }
   };
 }
-function openSheet(title, msg, text) {
+function esc(str) {
+  return str.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+function sheetHTML(id) {
+  const t = totals(), note = $("note").value.trim();
+  return `<div class="sv-id">ออเดอร์ #${id}</div>` +
+    cartLines().map((l, i) => `
+      <div class="sv-row">
+        <span class="sv-ic">${icon(l.item, l.sweet, "v" + i)}</span>
+        <span class="sv-nm"><b>${l.item.name}</b>${l.sweet === null ? "" : `<small>${sweetLabel(l.sweet)} ${l.sweet}%</small>`}</span>
+        <span class="sv-q">× ${l.q}</span>
+      </div>`).join("") +
+    `<div class="sv-sum">
+      <div><span>รวม ${countText(t.per)}</span><span>${t.regular} บาท</span></div>
+      ${t.groups.filter(g => g.discount).map(g => `<div class="disc"><span>ส่วนลดโปร ${g.label}</span><span>−${g.discount} บาท</span></div>`).join("")}
+      <div class="tot"><span>ยอดชำระ</span><span>${t.total} บาท</span></div>
+    </div>` +
+    (note ? `<p class="sv-note">ที่อยู่จัดส่ง: ${esc(note)}</p>` : "");
+}
+function openSheet(title, msg, text, id) {
+  $("sheetView").innerHTML = sheetHTML(id);
   $("sheetTitle").textContent = title;
   $("sheetMsg").textContent = msg;
   $("sheetText").textContent = text;
@@ -543,11 +627,11 @@ $("goBtn").onclick = async () => {
     } catch (err) {
       try { await liff.sendMessages([{ type: "text", text }]); setTimeout(() => liff.closeWindow(), 900); return; }
       catch (err2) {
-        openSheet("ส่งเข้าแชทไม่สำเร็จ", "กด สั่งซื้อ เพื่อลองส่งอีกครั้ง", text);
+        openSheet("ส่งเข้าแชทไม่สำเร็จ", "กด สั่งซื้อ เพื่อลองส่งอีกครั้ง", text, id);
       }
     } finally { btn.disabled = false; btn.textContent = "ยืนยันคำสั่งซื้อ"; }
   } else {
-    openSheet("สรุปคำสั่งซื้อ", "ตรวจสอบรายการ แล้วกด สั่งซื้อ เพื่อส่งเข้าแชทของร้าน", text);
+    openSheet("สรุปคำสั่งซื้อ", "ตรวจสอบรายการ แล้วกด สั่งซื้อ เพื่อส่งเข้าแชทของร้าน", text, id);
   }
 };
 
